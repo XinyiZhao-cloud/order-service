@@ -10,8 +10,11 @@ app.use(express.json()); // Middleware to parse incoming JSON request bodies.
 // Enable CORS (Cross-Origin Resource Sharing) for all routes
 app.use(cors());
 
-// Get the RabbitMQ URL and the port from environment variables
-const RABBITMQ_CONNECTION_STRING = process.env.RABBITMQ_CONNECTION_STRING || 'amqp://localhost';  // Fallback to localhost if not defined
+// Define the RabbitMQ connection string, using environment variables with a fallback to localhost.
+const RABBITMQ_CONNECTION_STRING =
+  process.env.RABBITMQ_URL ||
+  process.env.RABBITMQ_CONNECTION_STRING ||  // optional backward-compat
+  'amqp://localhost';
 const PORT = process.env.PORT || 3000;  // Fallback to port 3000 if not defined
 
 // Define a POST route for creating orders
