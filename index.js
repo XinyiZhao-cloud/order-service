@@ -10,12 +10,28 @@ app.use(express.json()); // Middleware to parse incoming JSON request bodies.
 // Enable CORS (Cross-Origin Resource Sharing) for all routes
 app.use(cors());
 
-// Define the RabbitMQ connection string, using environment variables with a fallback to localhost.
-const RABBITMQ_CONNECTION_STRING =
+// Lab-3 Define the RabbitMQ connection string, using environment variables with a fallback to localhost.
+/*const RABBITMQ_CONNECTION_STRING =
   process.env.RABBITMQ_URL ||
   process.env.RABBITMQ_CONNECTION_STRING ||  // optional backward-compat
   'amqp://localhost';
 const PORT = process.env.PORT || 3000;  // Fallback to port 3000 if not defined
+*/
+// Midterm-Porject: RabbitMQ config (Azure-ready)
+// Keep backward-compat for grading + older labs, but prefer RABBITMQ_URL for 12-factor config.
+const RABBITMQ_CONNECTION_STRING =
+  process.env.RABBITMQ_URL ||                 // (12-factor preferred)
+  process.env.RABBITMQ_CONNECTION_STRING ||   // (legacy/optional)
+  'amqp://localhost';                         // (local fallback)
+
+// ✅ Queue name (assignment requires order_queue, but env var makes it configurable)
+const QUEUE_NAME = process.env.QUEUE_NAME || 'order_queue';
+
+const PORT = process.env.PORT || 3000;  // Fallback to port 3000 if not defined
+
+// Helpful startup log (shows in Azure Log Stream)
+console.log('[order-service] RabbitMQ URL:', RABBITMQ_CONNECTION_STRING);
+console.log('[order-service] Queue:', QUEUE_NAME);
 
 // Define a POST route for creating orders
 app.post('/orders', (req, res) => {
@@ -35,7 +51,10 @@ app.post('/orders', (req, res) => {
         return res.status(500).send('Error creating channel');
       }
 
-      const queue = 'order_queue'; // Define the queue where the order will be sent.
+      // const queue = 'order_queue'; // Define the queue where the order will be sent.
+      //  (old hard-coded version for reference)
+      // Midterm-project: use env var for queue name, with fallback to 'order_queue' for grading and older labs.
+      const queue = QUEUE_NAME; // ✅ new version (reads from env, defaults to order_queue)
       const msg = JSON.stringify(order); // Convert the order object to a JSON string.
 
       // Assert (create) the queue if it doesn't already exist.
